@@ -16,12 +16,12 @@
 
 #import "STHorizontalPicker.h"
 
-const int DISTANCE_BETWEEN_ITEMS = 100;
+const int DISTANCE_BETWEEN_ITEMS = 40;
 const int TEXT_LAYER_WIDTH = 40;
 const int NUMBER_OF_ITEMS = 15;
 const float FONT_SIZE = 16.0f;
-const float POINTER_WIDTH = 10.0f;
-const float POINTER_HEIGHT = 7.0f;
+const float POINTER_WIDTH = 15.0f;
+const float POINTER_HEIGHT = 12.0f;
 
 //================================
 // UIColor category
@@ -67,10 +67,11 @@ const float POINTER_HEIGHT = 7.0f;
 
 // Private properties
 
-@property (nonatomic, retain) UIScrollView *scrollView;
-@property (nonatomic, retain) UIView *scrollViewMarkerContainerView;
-@property (nonatomic, retain) NSMutableArray *scrollViewMarkerLayerArray;
-@property (nonatomic, retain) CALayer *pointerLayer;
+@property (nonatomic, strong) UIScrollView *scrollView;
+@property (nonatomic, strong) UIView *scrollViewMarkerContainerView;
+@property (nonatomic, strong) NSMutableArray *scrollViewMarkerLayerArray;
+@property (nonatomic, strong) CAShapeLayer *pointerLayer;
+@property (nonatomic, strong) STPointerLayerDelegate *pointerLayerDelegate;
 
 @end;
     
@@ -96,11 +97,12 @@ const float POINTER_HEIGHT = 7.0f;
         
         // Ensures that the corners are transparent
         self.backgroundColor = [UIColor clearColor];
+        borderColor = [UIColor cptPrimaryColor];
         
         self.scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height)];
         self.scrollView.contentSize = CGSizeMake(contentWidth, self.frame.size.height);
         self.scrollView.layer.cornerRadius = 8.0f;
-        self.scrollView.layer.borderWidth = 1.0f;
+        self.scrollView.layer.borderWidth = 2.0f;
         self.scrollView.layer.borderColor = borderColor.CGColor ? borderColor.CGColor : [UIColor grayColor].CGColor;
         self.scrollView.backgroundColor = [UIColor colorWithRed:0.95 green:0.95 blue:0.95 alpha:1.0];
         self.scrollView.showsVerticalScrollIndicator = NO;
@@ -109,23 +111,9 @@ const float POINTER_HEIGHT = 7.0f;
         self.scrollView.delegate = self;
         
         self.scrollViewMarkerContainerView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, contentWidth, self.frame.size.height)];
-        self.scrollViewMarkerLayerArray = [NSMutableArray arrayWithCapacity:steps];
         
-        fontSize = 16.0;
-        
-        for (int i = 0; i <= steps; i++) {
-            CATextLayer *textLayer = [CATextLayer layer];
-            textLayer.contentsScale = scale;
-            textLayer.frame = CGRectIntegral(CGRectMake(leftPadding + i * DISTANCE_BETWEEN_ITEMS, self.frame.size.height/2 - self.fontSize / 2 + 1, TEXT_LAYER_WIDTH, 40));
-            textLayer.foregroundColor = [UIColor blackColor].CGColor;
-            textLayer.alignmentMode = kCAAlignmentCenter;
-            textLayer.fontSize = self.fontSize;
-            
-            textLayer.string = [NSString stringWithFormat:@"%.1f", (float) i + 1];
-            [self.scrollViewMarkerLayerArray addObject:textLayer];
-            [self.scrollViewMarkerContainerView.layer addSublayer:textLayer];
-        }
-        
+        [self setupMarkers];
+
         [self.scrollView addSubview:self.scrollViewMarkerContainerView];        
         [self addSubview:self.scrollView];
         [self snapToMarkerAnimated:NO];
@@ -176,7 +164,7 @@ const float POINTER_HEIGHT = 7.0f;
                                 (id)[[UIColor colorWithRed:0.25f green:0.25f blue:0.25f alpha:0.8] CGColor],
                                 (id)[[UIColor colorWithRed:0.05f green:0.05f blue:0.05f alpha:0.95] CGColor], nil];
         [self.layer insertSublayer:gradientLayer above:dropshadowLayer];
-        
+
         self.pointerLayer = [CALayer layer];
         [self.pointerLayer setValue:[NSNumber numberWithFloat:[borderColor red]] forKey:@"borderRed"];
         [self.pointerLayer setValue:[NSNumber numberWithFloat:[borderColor green]] forKey:@"borderGreen"];
@@ -185,9 +173,12 @@ const float POINTER_HEIGHT = 7.0f;
         self.pointerLayer.opacity = 1.0;
         self.pointerLayer.contentsScale = scale;
         self.pointerLayer.frame = CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height);
-        self.pointerLayer.delegate = [[[STPointerLayerDelegate alloc] init] autorelease];
+        self.pointerLayerDelegate = [[STPointerLayerDelegate alloc] init];
+        self.pointerLayer.delegate = self.pointerLayerDelegate;
+
         [self.layer insertSublayer:self.pointerLayer above:gradientLayer];
         [self.pointerLayer setNeedsDisplay];
+        
     }
     return self;
 }
@@ -254,18 +245,42 @@ const float POINTER_HEIGHT = 7.0f;
     
     // Configure the new markers
     self.scrollViewMarkerLayerArray = [NSMutableArray arrayWithCapacity:steps];
+    BOOL useDelegate = NO;
+    if (nil != delegate && [(id)delegate respondsToSelector:@selector(displayStringForPickerView:atStep:withValue:)]) {
+        useDelegate = YES;
+    }
     for (int i = 0; i <= steps; i++) {
-        CATextLayer *textLayer = [CATextLayer layer];
-        textLayer.contentsScale = scale;
-        textLayer.frame = CGRectIntegral(CGRectMake(leftPadding + i*DISTANCE_BETWEEN_ITEMS, self.frame.size.height / 2 - fontSize / 2 + 1, TEXT_LAYER_WIDTH, 40));
-        textLayer.foregroundColor = [UIColor blackColor].CGColor;
-        textLayer.alignmentMode = kCAAlignmentCenter;
-        textLayer.fontSize = fontSize;
         
-        textLayer.string = [NSString stringWithFormat:@"%.1f", (float) minimumValue + i * (maximumValue - minimumValue) / steps];
+        float currentValue = (float) minimumValue + i * (maximumValue - minimumValue) / steps;
+        CGRect layerFrame = CGRectIntegral(CGRectMake(leftPadding + i*DISTANCE_BETWEEN_ITEMS, self.frame.size.height / 2 - fontSize / 2 + 1, TEXT_LAYER_WIDTH, 40));
+        
+        CATextLayer *textLayer;
+        
+        if (nil != delegate && [delegate respondsToSelector:@selector(caTextLayerForPickerView:atStep:withValue:frame:)]) {
+            textLayer = [self.delegate caTextLayerForPickerView:self atStep:i withValue:currentValue frame:layerFrame];
+        } else {
+            textLayer = [CATextLayer layer];
+            textLayer.contentsScale = scale;
+            textLayer.frame = layerFrame;
+            textLayer.foregroundColor = [UIColor blackColor].CGColor;
+            textLayer.alignmentMode = kCAAlignmentCenter;
+            textLayer.fontSize = fontSize;
+            
+            if (useDelegate) {
+                textLayer.string = [self.delegate displayStringForPickerView:self atStep:i withValue:currentValue];
+            } else {
+                textLayer.string = [NSString stringWithFormat:@"%.0f", currentValue];
+            }
+        }
+        
         [self.scrollViewMarkerLayerArray addObject:textLayer];
         [self.scrollViewMarkerContainerView.layer addSublayer:textLayer];
     }
+}
+
+- (CGFloat)scale;
+{
+    return [[UIScreen mainScreen] scale];
 }
 
 - (CGFloat)minimumValue {
@@ -306,8 +321,6 @@ const float POINTER_HEIGHT = 7.0f;
 - (void)setBorderColor:(UIColor *)newBorderColor {
     if (newBorderColor != borderColor)
     {
-        [newBorderColor retain];
-        [borderColor release];
         borderColor = newBorderColor;
 
         [self.pointerLayer setValue:[NSNumber numberWithFloat:[borderColor red]] forKey:@"borderRed"];
@@ -337,6 +350,12 @@ const float POINTER_HEIGHT = 7.0f;
     CGFloat xValue = (newValue - minimumValue) / ((maximumValue-minimumValue) / steps) * itemWidth + TEXT_LAYER_WIDTH / 2;
         
     [self.scrollView setContentOffset:CGPointMake(xValue, 0.0f) animated:NO];
+}
+
+- (void)moveToMidPointValue;
+{
+    CGFloat midPoint = ((maximumValue + minimumValue) / 2.0f);
+    [self setValue:midPoint];
 }
 
 - (id)delegate {
@@ -369,11 +388,11 @@ const float POINTER_HEIGHT = 7.0f;
 
 - (void)dealloc
 {
-    [scrollView release];
-    [scrollViewMarkerContainerView release];
-    [scrollViewMarkerLayerArray release];
-    [pointerLayer release];
-    [super dealloc];
+    scrollView = nil;
+    scrollViewMarkerContainerView = nil;
+    scrollViewMarkerLayerArray = nil;
+    pointerLayer = nil;
+
 }
 
 @end
@@ -389,6 +408,7 @@ const float POINTER_HEIGHT = 7.0f;
     CGContextSaveGState(context);
 
     CGContextSetLineWidth(context, 2.0);
+    
 	CGContextSetRGBStrokeColor(context, [[layer valueForKey:@"borderRed"] floatValue], [[layer valueForKey:@"borderGreen"] floatValue], [[layer valueForKey:@"borderBlue"] floatValue], [[layer valueForKey:@"borderAlpha"] floatValue]);
     CGContextSetRGBFillColor(context, [[layer valueForKey:@"borderRed"] floatValue], [[layer valueForKey:@"borderGreen"] floatValue], [[layer valueForKey:@"borderBlue"] floatValue], [[layer valueForKey:@"borderAlpha"] floatValue]);
     

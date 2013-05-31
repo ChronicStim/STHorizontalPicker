@@ -29,6 +29,8 @@
 - (CGFloat)minimumValueForPickerView:(STHorizontalPicker *)picker;
 - (CGFloat)maximumValueForPickerView:(STHorizontalPicker *)picker;
 - (NSUInteger)stepCountForPickerView:(STHorizontalPicker *)picker;
+- (NSString *)displayStringForPickerView:(STHorizontalPicker *)picker atStep:(NSInteger)stepIndex withValue:(CGFloat)stepValue;
+- (CATextLayer *)caTextLayerForPickerView:(STHorizontalPicker *)picker atStep:(NSInteger)stepIndex withValue:(CGFloat)stepValue frame:(CGRect)layerFrame;
 
 @required
 - (void)pickerView:(STHorizontalPicker *)picker didSelectValue:(CGFloat)value;
@@ -69,6 +71,8 @@
 
 - (void)snapToMarkerAnimated:(BOOL)animated;
 
+- (CGFloat)scale;
+
 - (CGFloat)minimumValue;
 - (void)setMinimumValue:(CGFloat)newMin;
 
@@ -80,6 +84,7 @@
 
 - (CGFloat)value;
 - (void)setValue:(CGFloat)newValue;
+- (void)moveToMidPointValue;
 
 - (UIColor *)borderColor;
 - (void)setBorderColor:(UIColor *)newBorderColor;
