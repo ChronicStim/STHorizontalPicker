@@ -15,12 +15,13 @@
  */
 
 #import "STHorizontalPicker.h"
+#import "STHorizontalPickerScaleDecimal.h"
 
-const int DISTANCE_BETWEEN_ITEMS = 30;
+const int DISTANCE_BETWEEN_ITEMS = 40;
 const int TEXT_LAYER_WIDTH = 40;
 const int NUMBER_OF_ITEMS = 15;
 const float FONT_SIZE = 16.0f;
-const float POINTER_WIDTH = 15.0f;
+const float POINTER_WIDTH = 10.0f;
 const float POINTER_HEIGHT = 12.0f;
 
 //================================
@@ -79,7 +80,7 @@ const float POINTER_HEIGHT = 12.0f;
     
 @implementation STHorizontalPicker
 
-@synthesize scrollView, scrollViewMarkerContainerView, scrollViewMarkerLayerArray, name, pointerLayer, dropShadowColor, gradientColor, backColor, textColor, font;
+@synthesize scrollView, scrollViewMarkerContainerView, scrollViewMarkerLayerArray, name, pointerLayer, dropShadowColor, gradientColor, backColor, textColor, pointerFillColor, pointerStrokeColor, font, showScale;
 
 - (id)initWithFrame:(CGRect)frame
 {
@@ -90,7 +91,7 @@ const float POINTER_HEIGHT = 12.0f;
         float leftPadding = self.frame.size.width/2;
         float rightPadding = leftPadding;
         float contentWidth = leftPadding + (steps * DISTANCE_BETWEEN_ITEMS) + rightPadding + TEXT_LAYER_WIDTH / 2;
-        
+    
         scale = [[UIScreen mainScreen] scale];
         font = [UIFont fontWithName:@"Arial-BoldMT" size:12.0f];
         
@@ -101,7 +102,7 @@ const float POINTER_HEIGHT = 12.0f;
         // Ensures that the corners are transparent
         self.backgroundColor = [UIColor clearColor];
         
-        borderColor = [UIColor cptPrimaryColor];
+        borderColor = [UIColor blackColor];
         backColor = [UIColor whiteColor];
         
         self.scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height)];
@@ -158,12 +159,18 @@ const float POINTER_HEIGHT = 12.0f;
         self.gradientLayer.colors = [self gradientColorArray];
         [self.layer insertSublayer:self.gradientLayer above:self.dropshadowLayer];
 
+        pointerStrokeColor = [UIColor blackColor];
+        pointerFillColor = [UIColor yellowColor];
         self.pointerLayer = [CALayer layer];
-        [self.pointerLayer setValue:[NSNumber numberWithFloat:[borderColor red]] forKey:@"borderRed"];
-        [self.pointerLayer setValue:[NSNumber numberWithFloat:[borderColor green]] forKey:@"borderGreen"];
-        [self.pointerLayer setValue:[NSNumber numberWithFloat:[borderColor blue]] forKey:@"borderBlue"];
-        [self.pointerLayer setValue:[NSNumber numberWithFloat:[borderColor alpha]] forKey:@"borderAlpha"];        
-        self.pointerLayer.opacity = 1.0;
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerFillColor red]] forKey:@"pointerFillColorRed"];
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerFillColor green]] forKey:@"pointerFillColorGreen"];
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerFillColor blue]] forKey:@"pointerFillColorBlue"];
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerFillColor alpha]] forKey:@"pointerFillColorAlpha"];        
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerStrokeColor red]] forKey:@"pointerStrokeColorRed"];
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerStrokeColor green]] forKey:@"pointerStrokeColorGreen"];
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerStrokeColor blue]] forKey:@"pointerStrokeColorBlue"];
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerStrokeColor alpha]] forKey:@"pointerStrokeColorAlpha"];
+        self.pointerLayer.opacity = 0.8f;
         self.pointerLayer.contentsScale = scale;
         self.pointerLayer.frame = CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height);
         self.pointerLayerDelegate = [[STPointerLayerDelegate alloc] init];
@@ -252,6 +259,7 @@ const float POINTER_HEIGHT = 12.0f;
         if (nil != delegate && [delegate respondsToSelector:@selector(caTextLayerForPickerView:atStep:withValue:frame:)]) {
             textLayer = [self.delegate caTextLayerForPickerView:self atStep:i withValue:currentValue frame:layerFrame];
         } else {
+            /*
             textLayer = [CATextLayer layer];
             textLayer.contentsScale = scale;
             textLayer.frame = layerFrame;
@@ -265,10 +273,30 @@ const float POINTER_HEIGHT = 12.0f;
             } else {
                 textLayer.string = [NSString stringWithFormat:@"%.0f", currentValue];
             }
+             */
+            
+            CGRect layerFrame = CGRectIntegral(CGRectMake(leftPadding + i*DISTANCE_BETWEEN_ITEMS, 0, TEXT_LAYER_WIDTH, 35));
+            STHorizontalPickerScaleDecimal *scaleLayer = [[STHorizontalPickerScaleDecimal alloc] init];
+            scaleLayer.frame = layerFrame;
+            scaleLayer.contentsScale = scale;
+            scaleLayer.labelColor = [UIColor cptPrimaryColor].CGColor;
+            scaleLayer.scaleColor = [UIColor blackColor].CGColor;
+            scaleLayer.primaryLabel = (__bridge CFStringRef)[NSString stringWithFormat:@"%.0f", currentValue];
+            
+            [self.scrollViewMarkerLayerArray addObject:scaleLayer];
+            [self.scrollViewMarkerContainerView.layer addSublayer:scaleLayer];
+
         }
-        
-        [self.scrollViewMarkerLayerArray addObject:textLayer];
-        [self.scrollViewMarkerContainerView.layer addSublayer:textLayer];
+
+//        if (self.showScale) {
+//            CGRect scaleFrame = CGRectIntegral(CGRectMake(leftPadding + i*DISTANCE_BETWEEN_ITEMS, 0, TEXT_LAYER_WIDTH, 18));
+//            CALayer *scaleLayer = [[STHorizontalPickerScaleDecimal alloc] init];
+//            scaleLayer.frame = scaleFrame;
+//            [self.scrollViewMarkerContainerView.layer addSublayer:scaleLayer];
+//        }
+
+//        [self.scrollViewMarkerLayerArray addObject:textLayer];
+//        [self.scrollViewMarkerContainerView.layer addSublayer:textLayer];
     }
 }
 
@@ -375,12 +403,6 @@ const float POINTER_HEIGHT = 12.0f;
     {
         borderColor = newColor;
 
-        [self.pointerLayer setValue:[NSNumber numberWithFloat:[borderColor red]] forKey:@"borderRed"];
-        [self.pointerLayer setValue:[NSNumber numberWithFloat:[borderColor green]] forKey:@"borderGreen"];
-        [self.pointerLayer setValue:[NSNumber numberWithFloat:[borderColor blue]] forKey:@"borderBlue"];
-        [self.pointerLayer setValue:[NSNumber numberWithFloat:[borderColor alpha]] forKey:@"borderAlpha"];
-        [self.pointerLayer setNeedsDisplay];
-        
         self.scrollView.layer.borderColor = borderColor.CGColor;
     }
 }
@@ -440,6 +462,44 @@ const float POINTER_HEIGHT = 12.0f;
     }
 }
 
+- (UIColor *)pointerFillColor;
+{
+    return pointerFillColor;
+}
+
+- (void)setPointerFillColor:(UIColor *)newColor;
+{
+    if (newColor != pointerFillColor) {
+        pointerFillColor = newColor;
+
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerFillColor red]] forKey:@"pointerFillColorRed"];
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerFillColor green]] forKey:@"pointerFillColorGreen"];
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerFillColor blue]] forKey:@"pointerFillColorBlue"];
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerFillColor alpha]] forKey:@"pointerFillColorAlpha"];
+        [self.pointerLayer setNeedsDisplay];
+        
+    }
+}
+
+- (UIColor *)pointerStrokeColor;
+{
+    return pointerStrokeColor;
+}
+
+- (void)setPointerStrokeColor:(UIColor *)newColor;
+{
+    if (newColor != pointerStrokeColor) {
+        pointerStrokeColor = newColor;
+        
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerStrokeColor red]] forKey:@"pointerStrokeColorRed"];
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerStrokeColor green]] forKey:@"pointerStrokeColorGreen"];
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerStrokeColor blue]] forKey:@"pointerStrokeColorBlue"];
+        [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerStrokeColor alpha]] forKey:@"pointerStrokeColorAlpha"];
+        [self.pointerLayer setNeedsDisplay];
+        
+    }
+}
+
 - (CGFloat)fontSize {
     return fontSize;
 }
@@ -492,6 +552,18 @@ const float POINTER_HEIGHT = 12.0f;
     }
 }
 
+- (BOOL)showScale;
+{
+    return showScale;
+}
+
+- (void)setShowScale:(BOOL)newShowScale;
+{
+    if (newShowScale != showScale) {
+        showScale = newShowScale;
+        [self setupMarkers];
+    }
+}
 
 - (void)dealloc
 {
@@ -514,27 +586,41 @@ const float POINTER_HEIGHT = 12.0f;
 - (void)drawLayer:(CALayer *)layer inContext:(CGContextRef)context {
     CGContextSaveGState(context);
 
-    CGContextSetLineWidth(context, 2.0);
+    CGContextSetLineWidth(context, 1.0f);
+    CGContextSetLineCap(context, kCGLineCapButt);
+    CGContextSetLineJoin(context, kCGLineJoinMiter);
+    CGContextSetInterpolationQuality(context, kCGInterpolationHigh);
     
-	CGContextSetRGBStrokeColor(context, [[layer valueForKey:@"borderRed"] floatValue], [[layer valueForKey:@"borderGreen"] floatValue], [[layer valueForKey:@"borderBlue"] floatValue], [[layer valueForKey:@"borderAlpha"] floatValue]);
-    CGContextSetRGBFillColor(context, [[layer valueForKey:@"borderRed"] floatValue], [[layer valueForKey:@"borderGreen"] floatValue], [[layer valueForKey:@"borderBlue"] floatValue], [[layer valueForKey:@"borderAlpha"] floatValue]);
+	CGContextSetRGBStrokeColor(context, [[layer valueForKey:@"pointerStrokeColorRed"] floatValue], [[layer valueForKey:@"pointerStrokeColorGreen"] floatValue], [[layer valueForKey:@"pointerStrokeColorBlue"] floatValue], [[layer valueForKey:@"pointerStrokeColorAlpha"] floatValue]);
+    CGContextSetRGBFillColor(context, [[layer valueForKey:@"pointerFillColorRed"] floatValue], [[layer valueForKey:@"pointerFillColorGreen"] floatValue], [[layer valueForKey:@"pointerFillColorBlue"] floatValue], [[layer valueForKey:@"pointerFillColorAlpha"] floatValue]);
     
     CGContextSetShadowWithColor(context, CGSizeMake(0, 2), 3.0, [UIColor colorWithRed:0.0 green:0.0 blue:0.0 alpha:0.3].CGColor);
     
-    CGContextMoveToPoint(context, layer.frame.size.width / 2 - POINTER_WIDTH / 2, 0);
-    CGContextAddLineToPoint(context, layer.frame.size.width / 2, POINTER_HEIGHT);
-    CGContextAddLineToPoint(context, layer.frame.size.width / 2 + POINTER_WIDTH / 2, 0);    
+    CGMutablePathRef path;
+    path = CGPathCreateMutable();
+    CGPathMoveToPoint(path, NULL, layer.frame.size.width / 2 - POINTER_WIDTH / 2, 0);
+    CGPathAddLineToPoint(path, NULL, layer.frame.size.width / 2, POINTER_HEIGHT);
+    CGPathAddLineToPoint(path, NULL, layer.frame.size.width / 2 + POINTER_WIDTH / 2, 0);
+    CGPathCloseSubpath(path);
+
+    CGContextAddPath(context, path);
     CGContextFillPath(context);
+    CGContextAddPath(context, path);
     CGContextStrokePath(context);
     
     CGContextSetShadowWithColor(context, CGSizeMake(0, -2), 3.0, [UIColor colorWithRed:0.0 green:0.0 blue:0.0 alpha:0.3].CGColor);
+
+    path = CGPathCreateMutable();
+    CGPathMoveToPoint(path, NULL, layer.frame.size.width / 2 - POINTER_WIDTH / 2, layer.frame.size.height);
+    CGPathAddLineToPoint(path, NULL, layer.frame.size.width / 2, layer.frame.size.height - POINTER_HEIGHT);
+    CGPathAddLineToPoint(path, NULL, layer.frame.size.width / 2 + POINTER_WIDTH / 2, layer.frame.size.height);
+    CGPathCloseSubpath(path);
     
-    CGContextMoveToPoint(context, layer.frame.size.width / 2 - POINTER_WIDTH / 2, layer.frame.size.height);
-    CGContextAddLineToPoint(context, layer.frame.size.width / 2, layer.frame.size.height - POINTER_HEIGHT);
-    CGContextAddLineToPoint(context, layer.frame.size.width / 2 + POINTER_WIDTH / 2, layer.frame.size.height);    
+    CGContextAddPath(context, path);
     CGContextFillPath(context);
+    CGContextAddPath(context, path);
     CGContextStrokePath(context);
-    
+
     CGContextRestoreGState(context);
 }
 

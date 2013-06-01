@@ -65,9 +65,13 @@
     UIColor *gradientColor;
     UIColor *backColor;
     UIColor *textColor;
+    UIColor *pointerFillColor;
+    UIColor *pointerStrokeColor;
     
     UIFont *font;
     CGFloat fontSize;
+    
+    BOOL showScale;
     
     @private
     CGFloat scale; // Drawing scale    
@@ -78,7 +82,10 @@
 @property (nonatomic, strong) UIColor *gradientColor;
 @property (nonatomic, strong) UIColor *backColor;
 @property (nonatomic, strong) UIColor *textColor;
+@property (nonatomic, strong) UIColor *pointerFillColor;
+@property (nonatomic, strong) UIColor *pointerStrokeColor;
 @property (nonatomic, strong) UIFont *font;
+@property (nonatomic, assign) BOOL showScale;
 
 - (void)snapToMarkerAnimated:(BOOL)animated;
 
@@ -112,12 +119,21 @@
 - (UIColor *)textColor;
 - (void)setTextColor:(UIColor *)newColor;
 
+- (UIColor *)pointerFillColor;
+- (void)setPointerFillColor:(UIColor *)newColor;
+
+- (UIColor *)pointerStrokeColor;
+- (void)setPointerStrokeColor:(UIColor *)newColor;
+
 - (CGFloat)fontSize;
 - (void)setFontSize:(CGFloat)newFontSize;
 
 - (id)delegate;
 - (void)setDelegate:(id<STHorizontalPickerDelegate>)newDelegate;
 - (void)callDelegateWithNewValueFromOffset:(CGFloat)offset;
+
+- (BOOL)showScale;
+- (void)setShowScale:(BOOL)newShowScale;
 
 @end
 
