@@ -61,13 +61,24 @@
     id delegate;
     
     UIColor *borderColor;
+    UIColor *dropShadowColor;
+    UIColor *gradientColor;
+    UIColor *backColor;
+    UIColor *textColor;
+    
+    UIFont *font;
     CGFloat fontSize;
     
     @private
     CGFloat scale; // Drawing scale    
 }
 
-@property (nonatomic, retain) NSString *name;
+@property (nonatomic, strong) NSString *name;
+@property (nonatomic, strong) UIColor *dropShadowColor;
+@property (nonatomic, strong) UIColor *gradientColor;
+@property (nonatomic, strong) UIColor *backColor;
+@property (nonatomic, strong) UIColor *textColor;
+@property (nonatomic, strong) UIFont *font;
 
 - (void)snapToMarkerAnimated:(BOOL)animated;
 
@@ -87,7 +98,19 @@
 - (void)moveToMidPointValue;
 
 - (UIColor *)borderColor;
-- (void)setBorderColor:(UIColor *)newBorderColor;
+- (void)setBorderColor:(UIColor *)newColor;
+
+- (UIColor *)dropShadowColor;
+- (void)setDropShadowColor:(UIColor *)newColor;
+
+- (UIColor *)gradientColor;
+- (void)setGradientColor:(UIColor *)newColor;
+
+- (UIColor *)backColor;
+- (void)setBackColor:(UIColor *)newColor;
+
+- (UIColor *)textColor;
+- (void)setTextColor:(UIColor *)newColor;
 
 - (CGFloat)fontSize;
 - (void)setFontSize:(CGFloat)newFontSize;

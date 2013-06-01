@@ -16,7 +16,7 @@
 
 #import "STHorizontalPicker.h"
 
-const int DISTANCE_BETWEEN_ITEMS = 40;
+const int DISTANCE_BETWEEN_ITEMS = 30;
 const int TEXT_LAYER_WIDTH = 40;
 const int NUMBER_OF_ITEMS = 15;
 const float FONT_SIZE = 16.0f;
@@ -71,13 +71,15 @@ const float POINTER_HEIGHT = 12.0f;
 @property (nonatomic, strong) UIView *scrollViewMarkerContainerView;
 @property (nonatomic, strong) NSMutableArray *scrollViewMarkerLayerArray;
 @property (nonatomic, strong) CAShapeLayer *pointerLayer;
+@property (nonatomic, strong) CAGradientLayer *gradientLayer;
+@property (nonatomic, strong) CAGradientLayer *dropshadowLayer;
 @property (nonatomic, strong) STPointerLayerDelegate *pointerLayerDelegate;
 
 @end;
     
 @implementation STHorizontalPicker
 
-@synthesize scrollView, scrollViewMarkerContainerView, scrollViewMarkerLayerArray, name, pointerLayer;
+@synthesize scrollView, scrollViewMarkerContainerView, scrollViewMarkerLayerArray, name, pointerLayer, dropShadowColor, gradientColor, backColor, textColor, font;
 
 - (id)initWithFrame:(CGRect)frame
 {
@@ -90,6 +92,7 @@ const float POINTER_HEIGHT = 12.0f;
         float contentWidth = leftPadding + (steps * DISTANCE_BETWEEN_ITEMS) + rightPadding + TEXT_LAYER_WIDTH / 2;
         
         scale = [[UIScreen mainScreen] scale];
+        font = [UIFont fontWithName:@"Arial-BoldMT" size:12.0f];
         
         if ([self respondsToSelector:@selector(setContentScaleFactor:)]) {
             self.contentScaleFactor = scale;
@@ -97,14 +100,16 @@ const float POINTER_HEIGHT = 12.0f;
         
         // Ensures that the corners are transparent
         self.backgroundColor = [UIColor clearColor];
+        
         borderColor = [UIColor cptPrimaryColor];
+        backColor = [UIColor whiteColor];
         
         self.scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height)];
         self.scrollView.contentSize = CGSizeMake(contentWidth, self.frame.size.height);
         self.scrollView.layer.cornerRadius = 8.0f;
         self.scrollView.layer.borderWidth = 2.0f;
         self.scrollView.layer.borderColor = borderColor.CGColor ? borderColor.CGColor : [UIColor grayColor].CGColor;
-        self.scrollView.backgroundColor = [UIColor colorWithRed:0.95 green:0.95 blue:0.95 alpha:1.0];
+        self.scrollView.backgroundColor = backColor;
         self.scrollView.showsVerticalScrollIndicator = NO;
         self.scrollView.showsHorizontalScrollIndicator = NO;        
         self.scrollView.pagingEnabled = NO;
@@ -118,52 +123,40 @@ const float POINTER_HEIGHT = 12.0f;
         [self addSubview:self.scrollView];
         [self snapToMarkerAnimated:NO];
 
-        CAGradientLayer *dropshadowLayer = [CAGradientLayer layer];
-        dropshadowLayer.contentsScale = scale;
-        dropshadowLayer.cornerRadius = 8.0f;
-        dropshadowLayer.startPoint = CGPointMake(0.0f, 0.0f);
-        dropshadowLayer.endPoint = CGPointMake(0.0f, 1.0f);
-        dropshadowLayer.opacity = 1.0;
-        dropshadowLayer.frame = CGRectMake(1.0f, 1.0f, self.frame.size.width - 2.0, self.frame.size.height - 2.0);
-        dropshadowLayer.locations = [NSArray arrayWithObjects:
+        self.dropshadowLayer = [CAGradientLayer layer];
+        self.dropshadowLayer.contentsScale = scale;
+        self.dropshadowLayer.cornerRadius = 8.0f;
+        self.dropshadowLayer.startPoint = CGPointMake(0.0f, 0.0f);
+        self.dropshadowLayer.endPoint = CGPointMake(0.0f, 1.0f);
+        self.dropshadowLayer.opacity = 1.0;
+        self.dropshadowLayer.frame = CGRectMake(1.0f, 1.0f, self.frame.size.width - 2.0, self.frame.size.height - 2.0);
+        self.dropshadowLayer.locations = [NSArray arrayWithObjects:
                                    [NSNumber numberWithFloat:0.0f],
                                    [NSNumber numberWithFloat:0.05f],
                                    [NSNumber numberWithFloat:0.2f],
                                    [NSNumber numberWithFloat:0.8f],
                                    [NSNumber numberWithFloat:0.95f],                                   
                                    [NSNumber numberWithFloat:1.0f], nil];
-        dropshadowLayer.colors = [NSArray arrayWithObjects:
-                                (id)[[UIColor colorWithRed:0.05f green:0.05f blue:0.05f alpha:0.75] CGColor], 
-                                (id)[[UIColor colorWithRed:0.25f green:0.25f blue:0.25f alpha:0.55] CGColor], 
-                                (id)[[UIColor colorWithRed:1.0f green:1.0f blue:1.0f alpha:0.05] CGColor], 
-                                (id)[[UIColor colorWithRed:1.0f green:1.0f blue:1.0f alpha:0.05] CGColor], 
-                                (id)[[UIColor colorWithRed:0.25f green:0.25f blue:0.25f alpha:0.55] CGColor],
-                                (id)[[UIColor colorWithRed:0.05f green:0.05f blue:0.05f alpha:0.75] CGColor], nil];
+        self.dropshadowLayer.colors = [self dropShadowColorArray];
         
-        [self.layer insertSublayer:dropshadowLayer above:self.scrollView.layer];
+        [self.layer insertSublayer:self.dropshadowLayer above:self.scrollView.layer];
         
-        CAGradientLayer *gradientLayer = [CAGradientLayer layer];
-        gradientLayer.contentsScale = scale;
-        gradientLayer.cornerRadius = 8.0f;
-        gradientLayer.startPoint = CGPointMake(0.0f, 0.0f);
-        gradientLayer.endPoint = CGPointMake(1.0f, 0.0f);
-        gradientLayer.opacity = 1.0;
-        gradientLayer.frame = CGRectMake(1.0f, 1.0f, self.frame.size.width - 2.0, self.frame.size.height - 2.0);
-        gradientLayer.locations = [NSArray arrayWithObjects:
+        self.gradientLayer = [CAGradientLayer layer];
+        self.gradientLayer.contentsScale = scale;
+        self.gradientLayer.cornerRadius = 8.0f;
+        self.gradientLayer.startPoint = CGPointMake(0.0f, 0.0f);
+        self.gradientLayer.endPoint = CGPointMake(1.0f, 0.0f);
+        self.gradientLayer.opacity = 1.0;
+        self.gradientLayer.frame = CGRectMake(1.0f, 1.0f, self.frame.size.width - 2.0, self.frame.size.height - 2.0);
+        self.gradientLayer.locations = [NSArray arrayWithObjects:
                                    [NSNumber numberWithFloat:0.0f],
                                    [NSNumber numberWithFloat:0.05f],
                                    [NSNumber numberWithFloat:0.3f],
                                    [NSNumber numberWithFloat:0.7f],
                                    [NSNumber numberWithFloat:0.95f],                                   
                                    [NSNumber numberWithFloat:1.0f], nil];
-        gradientLayer.colors = [NSArray arrayWithObjects:
-                                (id)[[UIColor colorWithRed:0.05f green:0.05f blue:0.05f alpha:0.95] CGColor], 
-                                (id)[[UIColor colorWithRed:0.25f green:0.25f blue:0.25f alpha:0.8] CGColor], 
-                                (id)[[UIColor colorWithRed:1.0f green:1.0f blue:1.0f alpha:0.1] CGColor], 
-                                (id)[[UIColor colorWithRed:1.0f green:1.0f blue:1.0f alpha:0.1] CGColor], 
-                                (id)[[UIColor colorWithRed:0.25f green:0.25f blue:0.25f alpha:0.8] CGColor],
-                                (id)[[UIColor colorWithRed:0.05f green:0.05f blue:0.05f alpha:0.95] CGColor], nil];
-        [self.layer insertSublayer:gradientLayer above:dropshadowLayer];
+        self.gradientLayer.colors = [self gradientColorArray];
+        [self.layer insertSublayer:self.gradientLayer above:self.dropshadowLayer];
 
         self.pointerLayer = [CALayer layer];
         [self.pointerLayer setValue:[NSNumber numberWithFloat:[borderColor red]] forKey:@"borderRed"];
@@ -176,7 +169,7 @@ const float POINTER_HEIGHT = 12.0f;
         self.pointerLayerDelegate = [[STPointerLayerDelegate alloc] init];
         self.pointerLayer.delegate = self.pointerLayerDelegate;
 
-        [self.layer insertSublayer:self.pointerLayer above:gradientLayer];
+        [self.layer insertSublayer:self.pointerLayer above:self.gradientLayer];
         [self.pointerLayer setNeedsDisplay];
         
     }
@@ -252,7 +245,7 @@ const float POINTER_HEIGHT = 12.0f;
     for (int i = 0; i <= steps; i++) {
         
         float currentValue = (float) minimumValue + i * (maximumValue - minimumValue) / steps;
-        CGRect layerFrame = CGRectIntegral(CGRectMake(leftPadding + i*DISTANCE_BETWEEN_ITEMS, self.frame.size.height / 2 - fontSize / 2 + 1, TEXT_LAYER_WIDTH, 40));
+        CGRect layerFrame = CGRectIntegral(CGRectMake(leftPadding + i*DISTANCE_BETWEEN_ITEMS, self.frame.size.height / 2 - fontSize / 2 + 0, TEXT_LAYER_WIDTH, 40));
         
         CATextLayer *textLayer;
         
@@ -262,9 +255,10 @@ const float POINTER_HEIGHT = 12.0f;
             textLayer = [CATextLayer layer];
             textLayer.contentsScale = scale;
             textLayer.frame = layerFrame;
-            textLayer.foregroundColor = [UIColor blackColor].CGColor;
+            textLayer.foregroundColor = self.textColor.CGColor;
             textLayer.alignmentMode = kCAAlignmentCenter;
             textLayer.fontSize = fontSize;
+            textLayer.font = CGFontCreateWithFontName((__bridge CFStringRef)font.fontName);;
             
             if (useDelegate) {
                 textLayer.string = [self.delegate displayStringForPickerView:self atStep:i withValue:currentValue];
@@ -276,6 +270,64 @@ const float POINTER_HEIGHT = 12.0f;
         [self.scrollViewMarkerLayerArray addObject:textLayer];
         [self.scrollViewMarkerContainerView.layer addSublayer:textLayer];
     }
+}
+
+- (NSArray *)dropShadowColorArray;
+{
+    UIColor *mainColor;
+    if (nil != self.dropShadowColor) {
+        mainColor = self.dropShadowColor;
+    } else {
+        mainColor = [UIColor blackColor];
+    }
+    CGFloat hue, saturation, brightness, alpha;
+    if (![mainColor getHue:&hue saturation:&saturation brightness:&brightness alpha:&alpha]) {
+        NSLog(@"Unable to convert color to HSB model");
+        return [NSArray arrayWithObjects:
+                (id)[[UIColor colorWithRed:0.05f green:0.05f blue:0.05f alpha:0.75] CGColor],
+                (id)[[UIColor colorWithRed:0.25f green:0.25f blue:0.25f alpha:0.55] CGColor],
+                (id)[[UIColor colorWithRed:1.0f green:1.0f blue:1.0f alpha:0.05] CGColor],
+                (id)[[UIColor colorWithRed:1.0f green:1.0f blue:1.0f alpha:0.05] CGColor],
+                (id)[[UIColor colorWithRed:0.25f green:0.25f blue:0.25f alpha:0.55] CGColor],
+                (id)[[UIColor colorWithRed:0.05f green:0.05f blue:0.05f alpha:0.75] CGColor], nil];
+    }
+    
+    return [NSArray arrayWithObjects:
+     (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.05f alpha:alpha*0.75f] CGColor],
+     (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.25f alpha:alpha*0.55f] CGColor],
+     (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*1.0f alpha:alpha*0.05f] CGColor],
+     (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*1.0f alpha:alpha*0.05f] CGColor],
+     (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.25f alpha:alpha*0.55f] CGColor],
+     (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.05f alpha:alpha*0.75f] CGColor], nil];
+}
+
+- (NSArray *)gradientColorArray;
+{
+    UIColor *mainColor;
+    if (nil != self.gradientColor) {
+        mainColor = self.gradientColor;
+    } else {
+        mainColor = [UIColor blackColor];
+    }
+    CGFloat hue, saturation, brightness, alpha;
+    if (![mainColor getHue:&hue saturation:&saturation brightness:&brightness alpha:&alpha]) {
+        NSLog(@"Unable to convert color to HSB model");
+        return [NSArray arrayWithObjects:
+                (id)[[UIColor colorWithRed:0.05f green:0.05f blue:0.05f alpha:0.95] CGColor],
+                (id)[[UIColor colorWithRed:0.25f green:0.25f blue:0.25f alpha:0.8] CGColor],
+                (id)[[UIColor colorWithRed:1.0f green:1.0f blue:1.0f alpha:0.1] CGColor],
+                (id)[[UIColor colorWithRed:1.0f green:1.0f blue:1.0f alpha:0.1] CGColor],
+                (id)[[UIColor colorWithRed:0.25f green:0.25f blue:0.25f alpha:0.8] CGColor],
+                (id)[[UIColor colorWithRed:0.05f green:0.05f blue:0.05f alpha:0.95] CGColor], nil];
+    }
+    
+    return [NSArray arrayWithObjects:
+            (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.05f alpha:alpha*0.95f] CGColor],
+            (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.25f alpha:alpha*0.8f] CGColor],
+            (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*1.0f alpha:alpha*0.1f] CGColor],
+            (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*1.0f alpha:alpha*0.1f] CGColor],
+            (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.25f alpha:alpha*0.8f] CGColor],
+            (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.05f alpha:alpha*0.95f] CGColor], nil];
 }
 
 - (CGFloat)scale;
@@ -318,10 +370,10 @@ const float POINTER_HEIGHT = 12.0f;
     return borderColor;
 }
 
-- (void)setBorderColor:(UIColor *)newBorderColor {
-    if (newBorderColor != borderColor)
+- (void)setBorderColor:(UIColor *)newColor {
+    if (newColor != borderColor)
     {
-        borderColor = newBorderColor;
+        borderColor = newColor;
 
         [self.pointerLayer setValue:[NSNumber numberWithFloat:[borderColor red]] forKey:@"borderRed"];
         [self.pointerLayer setValue:[NSNumber numberWithFloat:[borderColor green]] forKey:@"borderGreen"];
@@ -330,6 +382,61 @@ const float POINTER_HEIGHT = 12.0f;
         [self.pointerLayer setNeedsDisplay];
         
         self.scrollView.layer.borderColor = borderColor.CGColor;
+    }
+}
+
+- (UIColor *)dropShadowColor;
+{
+    return dropShadowColor;
+}
+
+- (void)setDropShadowColor:(UIColor *)newColor;
+{
+    if (newColor != dropShadowColor) {
+        dropShadowColor = newColor;
+        self.dropshadowLayer.colors = [self dropShadowColorArray];
+        [self.dropshadowLayer setNeedsDisplay];
+    }
+}
+
+- (UIColor *)gradientColor;
+{
+    return gradientColor;
+}
+
+- (void)setGradientColor:(UIColor *)newColor;
+{
+    if (newColor != gradientColor) {
+        gradientColor = newColor;
+        self.gradientLayer.colors = [self gradientColorArray];
+        [self.gradientLayer setNeedsDisplay];
+    }
+}
+
+- (UIColor *)backColor;
+{
+    return backColor;
+}
+
+- (void)setBackColor:(UIColor *)newColor;
+{
+    if (newColor != backColor) {
+        backColor = newColor;
+        self.scrollView.backgroundColor = backColor;
+        [self.scrollView setNeedsDisplay];
+    }
+}
+
+- (UIColor *)textColor;
+{
+    return textColor;
+}
+
+- (void)setTextColor:(UIColor *)newColor;
+{
+    if (newColor != textColor) {
+        textColor = newColor;
+        [self setupMarkers];
     }
 }
 
