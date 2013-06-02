@@ -34,6 +34,7 @@
 
 @required
 - (void)pickerView:(STHorizontalPicker *)picker didSelectValue:(CGFloat)value;
+- (void)pickerView:(STHorizontalPicker *)picker didSnapToValue:(CGFloat)value;
 
 @end
 
@@ -86,6 +87,9 @@
 @property (nonatomic, strong) UIColor *pointerStrokeColor;
 @property (nonatomic, strong) UIFont *font;
 @property (nonatomic, assign) BOOL showScale;
+
+
+- (void)loadAllViewComponents;
 
 - (void)snapToMarkerAnimated:(BOOL)animated;
 
