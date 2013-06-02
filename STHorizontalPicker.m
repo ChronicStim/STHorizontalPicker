@@ -231,7 +231,7 @@ const float POINTER_HEIGHT = 12.0f;
         CGFloat newValue = target * [self sizeOfEachStep] + minimumValue;
         value = newValue;
         
-        [delegate pickerView:self didSnapToValue:newValue];
+//        [delegate pickerView:self didSnapToValue:newValue];
     }
 }
 
@@ -293,7 +293,7 @@ const float POINTER_HEIGHT = 12.0f;
             scaleLayer.frame = layerFrame;
             scaleLayer.contentsScale = scale;
             scaleLayer.labelColor = [UIColor cptPrimaryColor].CGColor;
-            scaleLayer.scaleColor = [UIColor blackColor].CGColor;
+            scaleLayer.scaleColor = [UIColor cptPrimaryColor].CGColor;
             scaleLayer.primaryLabel = (__bridge CFStringRef)[NSString stringWithFormat:@"%.0f", currentValue];
             
             [self.scrollViewMarkerLayerArray addObject:scaleLayer];
@@ -363,12 +363,12 @@ const float POINTER_HEIGHT = 12.0f;
     }
     
     return [NSArray arrayWithObjects:
-            (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.05f alpha:alpha*0.95f] CGColor],
-            (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.25f alpha:alpha*0.8f] CGColor],
+            (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.5f alpha:alpha*0.95f] CGColor],
+            (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.75f alpha:alpha*0.8f] CGColor],
             (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*1.0f alpha:alpha*0.1f] CGColor],
             (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*1.0f alpha:alpha*0.1f] CGColor],
-            (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.25f alpha:alpha*0.8f] CGColor],
-            (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.05f alpha:alpha*0.95f] CGColor], nil];
+            (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.75f alpha:alpha*0.8f] CGColor],
+            (id)[[UIColor colorWithHue:hue saturation:saturation brightness:brightness*.5f alpha:alpha*0.95f] CGColor], nil];
 }
 
 - (CGFloat)scale;
