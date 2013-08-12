@@ -205,7 +205,7 @@ const float POINTER_HEIGHT = 12.0f;
 
     CGFloat itemWidth = (float) DISTANCE_BETWEEN_ITEMS;
     
-    CGFloat offSet = offset / itemWidth;
+    CGFloat offSet = ((offSet - (itemWidth/2.0f)) / itemWidth);
 //    NSUInteger target = (NSUInteger)(offSet + 0.35f);
     NSUInteger target = (NSUInteger)roundf(offSet);
     target = target > steps ? steps - 1 : target;
@@ -220,9 +220,11 @@ const float POINTER_HEIGHT = 12.0f;
     CGFloat itemWidth = (float)DISTANCE_BETWEEN_ITEMS;
     CGFloat position = [self.scrollView contentOffset].x;
 
+//    NSLog(@"HorizPicker itemWidth: %.f position: %.f",itemWidth,position);
+    
     if (position < self.scrollViewMarkerContainerView.frame.size.width - self.frame.size.width / 2) {
         CGFloat newPosition = 0.0f;
-        CGFloat offSet = position / itemWidth;
+        CGFloat offSet = ((position - (itemWidth/2.0f)) / itemWidth);
 //        NSUInteger target = (NSUInteger)(offSet + 0.35f);
         NSUInteger target = (NSUInteger)roundf(offSet);
         target = target > steps ? steps - 1 : target;
@@ -230,6 +232,8 @@ const float POINTER_HEIGHT = 12.0f;
         [self.scrollView setContentOffset:CGPointMake(newPosition, 0.0f) animated:animated];
         CGFloat newValue = target * [self sizeOfEachStep] + minimumValue;
         value = newValue;
+        
+//        NSLog(@"HorizPicker snap: offset:%.f target:%i newPosition: %.f newValue:%.f",offSet,target,newPosition,newValue);
         
 //        [delegate pickerView:self didSnapToValue:newValue];
     }
