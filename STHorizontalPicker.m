@@ -205,7 +205,7 @@ const float POINTER_HEIGHT = 12.0f;
 
     CGFloat itemWidth = (float) DISTANCE_BETWEEN_ITEMS;
     
-    CGFloat offSet = ((offSet - (itemWidth/2.0f)) / itemWidth);
+    CGFloat offSet = ((offset - (itemWidth/2.0f)) / itemWidth);
 //    NSUInteger target = (NSUInteger)(offSet + 0.35f);
     NSUInteger target = (NSUInteger)roundf(offSet);
     target = target > steps ? steps - 1 : target;
@@ -553,6 +553,19 @@ const float POINTER_HEIGHT = 12.0f;
 {
     CGFloat midPoint = ((maximumValue + minimumValue) / 2.0f);
     [self setValue:midPoint];
+}
+
+-(void)moveToValue:(CGFloat)newValue withSnap:(BOOL)snap updateDelegate:(BOOL)updateDelegate;
+{
+    [self setValue:newValue];
+    if (snap) {
+        [self snapToMarkerAnimated:NO];
+    }
+    if (updateDelegate && nil != delegate) {
+        if ([delegate respondsToSelector:@selector(pickerView:didSelectValue:)]) {
+            [self callDelegateWithNewValueFromOffset:[self.scrollView contentOffset].x];
+        }
+    }
 }
 
 - (id)delegate {

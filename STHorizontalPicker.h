@@ -139,6 +139,8 @@
 - (BOOL)showScale;
 - (void)setShowScale:(BOOL)newShowScale;
 
+-(void)moveToValue:(CGFloat)newValue withSnap:(BOOL)snap updateDelegate:(BOOL)updateDelegate;
+
 @end
 
 
