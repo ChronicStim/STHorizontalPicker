@@ -188,9 +188,11 @@ const float POINTER_HEIGHT = 12.0f;
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
-    [self snapToMarkerAnimated:YES];
-    if (delegate && [delegate respondsToSelector:@selector(pickerView:didSelectValue:)]) {
-        [self callDelegateWithNewValueFromOffset:[self.scrollView contentOffset].x];
+    if (!decelerate) {
+        [self snapToMarkerAnimated:YES];
+        if (delegate && [delegate respondsToSelector:@selector(pickerView:didSelectValue:)]) {
+            [self callDelegateWithNewValueFromOffset:[self.scrollView contentOffset].x];
+        }
     }
 }
 
@@ -246,7 +248,8 @@ const float POINTER_HEIGHT = 12.0f;
     [self.scrollViewMarkerLayerArray removeAllObjects];
 }
 
-- (void)setupMarkers {
+- (void)setupMarkers;
+{
     [self removeAllMarkers];
     
     // Calculate the new size of the content
@@ -575,6 +578,11 @@ const float POINTER_HEIGHT = 12.0f;
 - (void)setDelegate:(id<STHorizontalPickerDelegate>)newDelegate {
     delegate = newDelegate;
     
+    [self resetMinMaxAndMarkersForPickerView];
+}
+
+-(void)resetMinMaxAndMarkersForPickerView;
+{
     BOOL needsReset = FALSE;
     
     if ([delegate respondsToSelector:@selector(minimumValueForPickerView:)]) {

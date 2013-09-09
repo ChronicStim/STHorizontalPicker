@@ -90,6 +90,7 @@
 
 
 - (void)loadAllViewComponents;
+- (void)setupMarkers;
 
 - (void)snapToMarkerAnimated:(BOOL)animated;
 
@@ -140,6 +141,7 @@
 - (void)setShowScale:(BOOL)newShowScale;
 
 -(void)moveToValue:(CGFloat)newValue withSnap:(BOOL)snap updateDelegate:(BOOL)updateDelegate;
+-(void)resetMinMaxAndMarkersForPickerView;
 
 @end
 
