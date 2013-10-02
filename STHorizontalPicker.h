@@ -88,7 +88,6 @@
 @property (nonatomic, strong) UIFont *font;
 @property (nonatomic, assign) BOOL showScale;
 
-
 - (void)loadAllViewComponents;
 - (void)setupMarkers;
 

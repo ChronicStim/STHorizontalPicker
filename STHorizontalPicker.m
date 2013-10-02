@@ -578,27 +578,36 @@ const float POINTER_HEIGHT = 12.0f;
 - (void)setDelegate:(id<STHorizontalPickerDelegate>)newDelegate {
     delegate = newDelegate;
     
-    [self resetMinMaxAndMarkersForPickerView];
+//    [self resetMinMaxAndMarkersForPickerView];
 }
 
 -(void)resetMinMaxAndMarkersForPickerView;
 {
-    BOOL needsReset = FALSE;
+    NSUInteger needsReset = 0;
     
     if ([delegate respondsToSelector:@selector(minimumValueForPickerView:)]) {
-        minimumValue = [delegate minimumValueForPickerView:self];
-        needsReset = TRUE;
+        CGFloat newMinValue = [delegate minimumValueForPickerView:self];
+        if (newMinValue != minimumValue) {
+            minimumValue = newMinValue;
+            needsReset += 1;
+        }
     }
     if ([delegate respondsToSelector:@selector(maximumValueForPickerView:)]) {
-        maximumValue = [delegate maximumValueForPickerView:self];
-        needsReset = TRUE;
+        CGFloat newMaxValue = [delegate maximumValueForPickerView:self];
+        if (newMaxValue != maximumValue) {
+            maximumValue = newMaxValue;
+            needsReset += 1;
+        }
     }
     if ([delegate respondsToSelector:@selector(stepCountForPickerView:)]) {
-        steps = [delegate stepCountForPickerView:self];
-        needsReset = TRUE;
+        CGFloat newStepsValue = [delegate stepCountForPickerView:self];
+        if (newStepsValue != steps) {
+            steps = newStepsValue;
+            needsReset += 1;
+        }
     }
     
-    if (needsReset) {
+    if (needsReset > 0) {
         [self setupMarkers];
     }
 }
@@ -622,7 +631,6 @@ const float POINTER_HEIGHT = 12.0f;
     scrollViewMarkerContainerView = nil;
     scrollViewMarkerLayerArray = nil;
     pointerLayer = nil;
-
 }
 
 @end
