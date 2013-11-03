@@ -679,7 +679,8 @@ const float POINTER_HEIGHT = 12.0f;
     CGContextFillPath(context);
     CGContextAddPath(context, path);
     CGContextStrokePath(context);
-
+    CGPathRelease(path);
+    
     CGContextRestoreGState(context);
 }
 

@@ -48,7 +48,9 @@ const CGFloat kSTHorizontalPickerScaleDecimalHeight = 40.0f;
         components[1] = 0.0f;
         components[2] = 0.0f;
         components[3] = 1.0f;
-        return (__bridge_transfer id)CGColorCreate(space, components);
+        CGColorRef color = CGColorCreate(space, components);
+        CGColorSpaceRelease(space);
+        return (__bridge_transfer id)color;
     }
     if ([key isEqualToString:@"primaryLabel"]) {
         return (id)CFSTR("200");
@@ -60,7 +62,9 @@ const CGFloat kSTHorizontalPickerScaleDecimalHeight = 40.0f;
         components[1] = 0.157f;
         components[2] = 0.333f;
         components[3] = 1.0f;
-        return (__bridge_transfer id)CGColorCreate(space, components);
+        CGColorRef color = CGColorCreate(space, components);
+        CGColorSpaceRelease(space);
+        return (__bridge_transfer id)color;
     }
     return [super defaultValueForKey:key];
 }
