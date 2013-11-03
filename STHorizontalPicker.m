@@ -263,10 +263,6 @@ const float POINTER_HEIGHT = 12.0f;
     
     // Configure the new markers
     self.scrollViewMarkerLayerArray = [NSMutableArray arrayWithCapacity:steps];
-    BOOL useDelegate = NO;
-    if (nil != delegate && [(id)delegate respondsToSelector:@selector(displayStringForPickerView:atStep:withValue:)]) {
-        useDelegate = YES;
-    }
     for (int i = 0; i <= steps; i++) {
         
         float currentValue = (float) minimumValue + i * (maximumValue - minimumValue) / steps;
@@ -279,22 +275,6 @@ const float POINTER_HEIGHT = 12.0f;
             [self.scrollViewMarkerContainerView.layer addSublayer:textLayer];
             
         } else {
-            /*
-            textLayer = [CATextLayer layer];
-            textLayer.contentsScale = scale;
-            textLayer.frame = layerFrame;
-            textLayer.foregroundColor = self.textColor.CGColor;
-            textLayer.alignmentMode = kCAAlignmentCenter;
-            textLayer.fontSize = fontSize;
-            textLayer.font = CGFontCreateWithFontName((__bridge CFStringRef)font.fontName);;
-            
-            if (useDelegate) {
-                textLayer.string = [self.delegate displayStringForPickerView:self atStep:i withValue:currentValue];
-            } else {
-                textLayer.string = [NSString stringWithFormat:@"%.0f", currentValue];
-            }
-             */
-            
             CGRect layerFrame = CGRectIntegral(CGRectMake(leftPadding + i*DISTANCE_BETWEEN_ITEMS, 0, TEXT_LAYER_WIDTH, 35));
             STHorizontalPickerScaleDecimal *scaleLayer = [[STHorizontalPickerScaleDecimal alloc] init];
             scaleLayer.frame = layerFrame;
@@ -307,16 +287,6 @@ const float POINTER_HEIGHT = 12.0f;
             [self.scrollViewMarkerContainerView.layer addSublayer:scaleLayer];
 
         }
-
-//        if (self.showScale) {
-//            CGRect scaleFrame = CGRectIntegral(CGRectMake(leftPadding + i*DISTANCE_BETWEEN_ITEMS, 0, TEXT_LAYER_WIDTH, 18));
-//            CALayer *scaleLayer = [[STHorizontalPickerScaleDecimal alloc] init];
-//            scaleLayer.frame = scaleFrame;
-//            [self.scrollViewMarkerContainerView.layer addSublayer:scaleLayer];
-//        }
-
-//        [self.scrollViewMarkerLayerArray addObject:textLayer];
-//        [self.scrollViewMarkerContainerView.layer addSublayer:textLayer];
     }
 }
 
