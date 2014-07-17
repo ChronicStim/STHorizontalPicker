@@ -168,7 +168,7 @@ const float POINTER_HEIGHT = 12.0f;
     
     pointerStrokeColor = [UIColor blackColor];
     pointerFillColor = [UIColor yellowColor];
-    self.pointerLayer = [CALayer layer];
+    self.pointerLayer = [CAShapeLayer layer];
     [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerFillColor red]] forKey:@"pointerFillColorRed"];
     [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerFillColor green]] forKey:@"pointerFillColorGreen"];
     [self.pointerLayer setValue:[NSNumber numberWithFloat:[pointerFillColor blue]] forKey:@"pointerFillColorBlue"];
