@@ -149,7 +149,8 @@
 //================================
 // STPointerLayerDelegate interface
 //================================
-@interface STPointerLayerDelegate : NSObject {}
+@interface STPointerLayerDelegate : NSObject <CALayerDelegate>
+{}
 
 - (void)drawLayer:(CALayer *)layer inContext:(CGContextRef)context;
 
