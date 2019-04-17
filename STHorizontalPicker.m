@@ -187,6 +187,28 @@ const float POINTER_HEIGHT = 12.0f;
     [self.pointerLayer setNeedsDisplay];
 }
 
+-(void)layoutSubviews;
+{
+    float leftPadding = self.frame.size.width/2;
+    float rightPadding = leftPadding;
+    float contentWidth = leftPadding + (steps * DISTANCE_BETWEEN_ITEMS) + rightPadding + TEXT_LAYER_WIDTH / 2;
+    
+    self.scrollView.frame = CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height);
+    self.scrollView.contentSize = CGSizeMake(contentWidth, self.frame.size.height);
+
+    self.scrollViewMarkerContainerView.frame = CGRectMake(0.0f, 0.0f, contentWidth, self.frame.size.height);
+    
+    [self setupMarkers];
+    
+    [self snapToMarkerAnimated:NO];
+
+    self.dropshadowLayer.frame = CGRectMake(1.0f, 1.0f, self.frame.size.width - 2.0, self.frame.size.height - 2.0);
+
+    self.gradientLayer.frame = CGRectMake(1.0f, 1.0f, self.frame.size.width - 2.0, self.frame.size.height - 2.0);
+
+    self.pointerLayer.frame = CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height);
+}
+
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
     if (!decelerate) {
         [self snapToMarkerAnimated:YES];
@@ -208,6 +230,9 @@ const float POINTER_HEIGHT = 12.0f;
     CGFloat itemWidth = (float) DISTANCE_BETWEEN_ITEMS;
     
     CGFloat offSet = ((offset - (itemWidth/2.0f)) / itemWidth);
+    if (0.0f > offSet) {
+        offSet = 0.0f;
+    }
 //    NSUInteger target = (NSUInteger)(offSet + 0.35f);
     NSUInteger target = (NSUInteger)roundf(offSet);
     target = target > steps ? steps - 1 : target;
@@ -227,8 +252,11 @@ const float POINTER_HEIGHT = 12.0f;
     if (position < self.scrollViewMarkerContainerView.frame.size.width - self.frame.size.width / 2) {
         CGFloat newPosition = 0.0f;
         CGFloat offSet = ((position - (itemWidth/2.0f)) / itemWidth);
+        if (0.0f > offSet) {
+            offSet = 0.0f;
+        }
 //        NSUInteger target = (NSUInteger)(offSet + 0.35f);
-        NSUInteger target = (NSUInteger)roundf(offSet);
+         NSUInteger target = (NSUInteger)roundf(offSet);
         target = target > steps ? steps - 1 : target;
         newPosition = roundf(target * itemWidth + (TEXT_LAYER_WIDTH / 2.0f));
         [self.scrollView setContentOffset:CGPointMake(newPosition, 0.0f) animated:animated];
@@ -237,7 +265,7 @@ const float POINTER_HEIGHT = 12.0f;
         
 //        NSLog(@"HorizPicker snap: offset:%.f target:%i newPosition: %.f newValue:%.f",offSet,target,newPosition,newValue);
         
-//        [delegate pickerView:self didSnapToValue:newValue];
+        [delegate pickerView:self didSnapToValue:newValue];
     }
 }
 
