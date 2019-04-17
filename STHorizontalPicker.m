@@ -631,6 +631,11 @@ const float POINTER_HEIGHT = 12.0f;
     pointerLayer = nil;
 }
 
+-(BOOL)isScrolling;
+{
+    return (scrollView.isDragging || scrollView.isDecelerating || scrollView.isTracking);
+}
+
 @end
 
 

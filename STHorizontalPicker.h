@@ -142,6 +142,8 @@
 -(void)moveToValue:(CGFloat)newValue withSnap:(BOOL)snap updateDelegate:(BOOL)updateDelegate;
 -(void)resetMinMaxAndMarkersForPickerView;
 
+-(BOOL)isScrolling;
+
 @end
 
 
