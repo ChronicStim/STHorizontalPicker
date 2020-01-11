@@ -15,14 +15,16 @@
  */
 
 #import "STHorizontalPicker.h"
+#import "STHorizontalPickerScale.h"
 #import "STHorizontalPickerScaleDecimal.h"
+#import "STHorizontalPickerScaleSimple.h"
 
 const int DISTANCE_BETWEEN_ITEMS = 40;
 const int TEXT_LAYER_WIDTH = 40;
 const int NUMBER_OF_ITEMS = 15;
 const float FONT_SIZE = 16.0f;
-const float POINTER_WIDTH = 10.0f;
-const float POINTER_HEIGHT = 12.0f;
+const float POINTER_WIDTH = 16.0f;
+const float POINTER_HEIGHT = 18.0f;
 
 //================================
 // UIColor category
@@ -81,6 +83,7 @@ const float POINTER_HEIGHT = 12.0f;
 @implementation STHorizontalPicker
 
 @synthesize scrollView, scrollViewMarkerContainerView, scrollViewMarkerLayerArray, name, pointerLayer, dropShadowColor, gradientColor, backColor, textColor, pointerFillColor, pointerStrokeColor, font, showScale;
+@synthesize delegate = _delegate;
 
 - (id)initWithFrame:(CGRect)frame
 {
@@ -96,8 +99,10 @@ const float POINTER_HEIGHT = 12.0f;
     steps = 15;
     
     float leftPadding = self.frame.size.width/2;
+    float distanceBetweenItems = [self spacerSizePerStep].width;
+    float labelItemWidth = [self labelSizePerStep].width;
     float rightPadding = leftPadding;
-    float contentWidth = leftPadding + (steps * DISTANCE_BETWEEN_ITEMS) + rightPadding + TEXT_LAYER_WIDTH / 2;
+    float contentWidth = leftPadding + (steps * distanceBetweenItems) + rightPadding + labelItemWidth / 2;
     
     scale = [[UIScreen mainScreen] scale];
     font = [UIFont fontWithName:@"Arial-BoldMT" size:12.0f];
@@ -190,9 +195,11 @@ const float POINTER_HEIGHT = 12.0f;
 -(void)layoutSubviews;
 {
     float leftPadding = self.frame.size.width/2;
+    float distanceBetweenItems = [self spacerSizePerStep].width;
+    float labelItemWidth = [self labelSizePerStep].width;
     float rightPadding = leftPadding;
-    float contentWidth = leftPadding + (steps * DISTANCE_BETWEEN_ITEMS) + rightPadding + TEXT_LAYER_WIDTH / 2;
-    
+    float contentWidth = leftPadding + (steps * distanceBetweenItems) + rightPadding + labelItemWidth / 2;
+
     self.scrollView.frame = CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height);
     self.scrollView.contentSize = CGSizeMake(contentWidth, self.frame.size.height);
 
@@ -212,7 +219,7 @@ const float POINTER_HEIGHT = 12.0f;
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
     if (!decelerate) {
         [self snapToMarkerAnimated:YES];
-        if (delegate && [delegate respondsToSelector:@selector(pickerView:didSelectValue:)]) {
+        if (self.delegate && [self.delegate respondsToSelector:@selector(pickerView:didSelectValue:)]) {
             [self callDelegateWithNewValueFromOffset:[self.scrollView contentOffset].x];
         }
     }
@@ -220,16 +227,16 @@ const float POINTER_HEIGHT = 12.0f;
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
     [self snapToMarkerAnimated:YES];
-    if (delegate && [delegate respondsToSelector:@selector(pickerView:didSelectValue:)]) {
+    if (self.delegate && [self.delegate respondsToSelector:@selector(pickerView:didSelectValue:)]) {
         [self callDelegateWithNewValueFromOffset:[self.scrollView contentOffset].x];
     }    
 }
 
 - (void)callDelegateWithNewValueFromOffset:(CGFloat)offset {
 
-    CGFloat itemWidth = (float) DISTANCE_BETWEEN_ITEMS;
+    float distanceBetweenItems = [self spacerSizePerStep].width;
     
-    CGFloat offSet = ((offset - (itemWidth/2.0f)) / itemWidth);
+    CGFloat offSet = ((offset - (distanceBetweenItems/2.0f)) / distanceBetweenItems);
     if (0.0f > offSet) {
         offSet = 0.0f;
     }
@@ -239,33 +246,36 @@ const float POINTER_HEIGHT = 12.0f;
     CGFloat newValue = target * [self sizeOfEachStep] + minimumValue;
     value = newValue;
     
-    [delegate pickerView:self didSelectValue:newValue];
+    [self.delegate pickerView:self didSelectValue:newValue];
     
 }
 
 - (void)snapToMarkerAnimated:(BOOL)animated {
-    CGFloat itemWidth = (float)DISTANCE_BETWEEN_ITEMS;
+
+    float distanceBetweenItems = [self spacerSizePerStep].width;
+    
     CGFloat position = [self.scrollView contentOffset].x;
 
 //    NSLog(@"HorizPicker itemWidth: %.f position: %.f",itemWidth,position);
     
     if (position < self.scrollViewMarkerContainerView.frame.size.width - self.frame.size.width / 2) {
         CGFloat newPosition = 0.0f;
-        CGFloat offSet = ((position - (itemWidth/2.0f)) / itemWidth);
+        CGFloat offSet = ((position - (distanceBetweenItems/2.0f)) / distanceBetweenItems);
         if (0.0f > offSet) {
             offSet = 0.0f;
         }
 //        NSUInteger target = (NSUInteger)(offSet + 0.35f);
          NSUInteger target = (NSUInteger)roundf(offSet);
         target = target > steps ? steps - 1 : target;
-        newPosition = roundf(target * itemWidth + (TEXT_LAYER_WIDTH / 2.0f));
+        float labelWidth = [self labelSizePerStep].width;
+        newPosition = roundf(target * distanceBetweenItems + (labelWidth / 2.0f));
         [self.scrollView setContentOffset:CGPointMake(newPosition, 0.0f) animated:animated];
         CGFloat newValue = target * [self sizeOfEachStep] + minimumValue;
         value = newValue;
         
 //        NSLog(@"HorizPicker snap: offset:%.f target:%i newPosition: %.f newValue:%.f",offSet,target,newPosition,newValue);
         
-        [delegate pickerView:self didSnapToValue:newValue];
+        [self.delegate pickerView:self didSnapToValue:newValue];
     }
 }
 
@@ -282,8 +292,11 @@ const float POINTER_HEIGHT = 12.0f;
     
     // Calculate the new size of the content
     float leftPadding = self.frame.size.width / 2;
+    float distanceBetweenItems = [self spacerSizePerStep].width;
+    float labelItemWidth = [self labelSizePerStep].width;
     float rightPadding = leftPadding;
-    float contentWidth = leftPadding + (steps * DISTANCE_BETWEEN_ITEMS) + rightPadding + TEXT_LAYER_WIDTH / 2;
+    float contentWidth = leftPadding + (steps * distanceBetweenItems) + rightPadding + labelItemWidth / 2;
+
     self.scrollView.contentSize = CGSizeMake(contentWidth, self.frame.size.height);
     
     // Set the size of the marker container view
@@ -294,16 +307,62 @@ const float POINTER_HEIGHT = 12.0f;
     for (int i = 0; i <= steps; i++) {
         
         float currentValue = (float) minimumValue + i * (maximumValue - minimumValue) / steps;
-        CGRect layerFrame = CGRectIntegral(CGRectMake(leftPadding + i*DISTANCE_BETWEEN_ITEMS, self.frame.size.height / 2 - fontSize / 2 + 0, TEXT_LAYER_WIDTH, 40));
         
-        if (nil != delegate && [delegate respondsToSelector:@selector(caTextLayerForPickerView:atStep:withValue:frame:)]) {
-            CATextLayer *textLayer = [self.delegate caTextLayerForPickerView:self atStep:i withValue:currentValue frame:layerFrame];
-
-            [self.scrollViewMarkerLayerArray addObject:textLayer];
-            [self.scrollViewMarkerContainerView.layer addSublayer:textLayer];
+        if (nil != self.delegate && [self.delegate respondsToSelector:@selector(scaleTypeForPickerView:)]) {
             
+            STHorizontalPickerScaleType scaleType = [self.delegate scaleTypeForPickerView:self];
+            
+            STHorizontalPickerScale *scaleLayer = nil;
+            CGRect layerFrame = CGRectIntegral(CGRectMake(leftPadding + i*distanceBetweenItems, 0, labelItemWidth, (self.frame.size.height-5.0f)));
+
+            switch (scaleType) {
+                case STHorizontalPickerScaleType_None:  {
+                    
+                    scaleLayer = (STHorizontalPickerScaleDecimal *)[[STHorizontalPickerScaleDecimal alloc] init];
+                    scaleLayer.frame = layerFrame;
+                    scaleLayer.contentsScale = scale;
+                    scaleLayer.labelColor = [UIColor cptPrimaryColor].CGColor;
+                    scaleLayer.scaleColor = [UIColor clearColor].CGColor;
+
+                }   break;
+                case STHorizontalPickerScaleType_Simple:  {
+                    
+                    scaleLayer = (STHorizontalPickerScaleSimple *)[[STHorizontalPickerScaleSimple alloc] init];
+                    scaleLayer.frame = layerFrame;
+                    scaleLayer.contentsScale = scale;
+                    scaleLayer.labelColor = [UIColor cptPrimaryColor].CGColor;
+                    scaleLayer.scaleColor = [UIColor cptPrimaryColor].CGColor;
+
+                }   break;
+                case STHorizontalPickerScaleType_Decimal:  {
+                    
+                    scaleLayer = (STHorizontalPickerScaleDecimal *)[[STHorizontalPickerScaleDecimal alloc] init];
+                    scaleLayer.frame = layerFrame;
+                    scaleLayer.contentsScale = scale;
+                    scaleLayer.labelColor = [UIColor cptPrimaryColor].CGColor;
+                    scaleLayer.scaleColor = [UIColor cptPrimaryColor].CGColor;
+
+                }   break;
+
+                default:
+                    break;
+            }
+            
+            scaleLayer.labelSizePerStep = self.labelSizePerStep;
+            scaleLayer.spacerSizePerStep = self.spacerSizePerStep;
+            scaleLayer.fontSize = self.fontSize;
+            
+            if (nil != self.delegate && [self.delegate respondsToSelector:@selector(displayStringForPickerView:atStep:withValue:)]) {
+                scaleLayer.primaryLabel = (__bridge CFStringRef)[self.delegate displayStringForPickerView:self atStep:i withValue:currentValue];
+            } else {
+                scaleLayer.primaryLabel = (__bridge CFStringRef)[NSString stringWithFormat:@"%.0f", currentValue];
+            }
+            
+            [self.scrollViewMarkerLayerArray addObject:scaleLayer];
+            [self.scrollViewMarkerContainerView.layer addSublayer:scaleLayer];
+
         } else {
-            CGRect layerFrame = CGRectIntegral(CGRectMake(leftPadding + i*DISTANCE_BETWEEN_ITEMS, 0, TEXT_LAYER_WIDTH, 35));
+            CGRect layerFrame = CGRectIntegral(CGRectMake(leftPadding + i*distanceBetweenItems, 0, labelItemWidth, (self.frame.size.height-5.0f)));
             STHorizontalPickerScaleDecimal *scaleLayer = [[STHorizontalPickerScaleDecimal alloc] init];
             scaleLayer.frame = layerFrame;
             scaleLayer.contentsScale = scale;
@@ -316,6 +375,56 @@ const float POINTER_HEIGHT = 12.0f;
 
         }
     }
+}
+
+- (CGSize)labelSizePerStep;
+{
+    if (CGSizeEqualToSize(CGSizeZero, _labelSizePerStep)) {
+        // Force initialization of the size
+        [self setLabelSizePerStep:_labelSizePerStep];
+    }
+    return _labelSizePerStep;
+}
+
+-(void)setLabelSizePerStep:(CGSize)newSize;
+{
+    if (CGSizeEqualToSize(CGSizeZero, newSize)) {
+        if (nil != self.delegate && [(NSObject *)self.delegate respondsToSelector:@selector(labelSizePerStepForPickerView:)]) {
+            // Get Size from delegate if available
+            _labelSizePerStep = [self.delegate labelSizePerStepForPickerView:self];
+        } else {
+            // Get Size from defaults
+            _labelSizePerStep = CGSizeMake(TEXT_LAYER_WIDTH, self.bounds.size.height);
+        }
+    } else {
+        _labelSizePerStep = newSize;
+    }
+    [self setNeedsLayout];
+}
+
+- (CGSize)spacerSizePerStep;
+{
+    if (CGSizeEqualToSize(CGSizeZero, _spacerSizePerStep)) {
+        // Force initialization of the size
+        [self setSpacerSizePerStep:_spacerSizePerStep];
+    }
+    return _spacerSizePerStep;
+}
+
+-(void)setSpacerSizePerStep:(CGSize)newSize;
+{
+    if (CGSizeEqualToSize(CGSizeZero, newSize)) {
+        if (nil != self.delegate && [(NSObject *)self.delegate respondsToSelector:@selector(spacerSizePerStepForPickerView:)]) {
+            // Get Size from delegate if available
+            _spacerSizePerStep = [self.delegate spacerSizePerStepForPickerView:self];
+        } else {
+            // Get Size from defaults
+            _spacerSizePerStep = CGSizeMake(DISTANCE_BETWEEN_ITEMS, self.bounds.size.height);
+        }
+    } else {
+        _spacerSizePerStep = newSize;
+    }
+    [self setNeedsLayout];
 }
 
 - (NSArray *)dropShadowColorArray;
@@ -527,11 +636,18 @@ const float POINTER_HEIGHT = 12.0f;
 }
 
 - (CGFloat)fontSize {
+    
     return fontSize;
 }
 
 - (void)setFontSize:(CGFloat)newFontSize {
-    fontSize = newFontSize;
+
+    if (nil != self.delegate && [(NSObject *)self.delegate respondsToSelector:@selector(fontSizeForPrimaryLabelString:)]) {
+        fontSize = [self.delegate fontSizeForLabelForPickerView:self];
+    } else {
+        fontSize = newFontSize;
+    }
+
     [self setupMarkers];
 }
 
@@ -539,12 +655,15 @@ const float POINTER_HEIGHT = 12.0f;
     value = newValue > maximumValue ? maximumValue : newValue;
     value = newValue < minimumValue ? minimumValue : newValue;
     
-    CGFloat itemWidth = (float) DISTANCE_BETWEEN_ITEMS;
+    float distanceBetweenItems = [self spacerSizePerStep].width;
+    float labelItemWidth = [self labelSizePerStep].width;
+    
+    CGFloat itemWidth = (float) distanceBetweenItems;
     CGFloat xValue;
     if (maximumValue == minimumValue || steps == 0) {
         xValue = 0.0f;
     } else {
-        xValue = (newValue - minimumValue) / ((maximumValue-minimumValue) / steps) * itemWidth + TEXT_LAYER_WIDTH / 2;
+        xValue = (newValue - minimumValue) / ((maximumValue-minimumValue) / steps) * itemWidth + labelItemWidth / 2;
     }
     
     [self.scrollView setContentOffset:CGPointMake(xValue, 0.0f) animated:NO];
@@ -562,45 +681,51 @@ const float POINTER_HEIGHT = 12.0f;
     if (snap) {
         [self snapToMarkerAnimated:NO];
     }
-    if (updateDelegate && nil != delegate) {
-        if ([delegate respondsToSelector:@selector(pickerView:didSelectValue:)]) {
+    if (updateDelegate && nil != self.delegate) {
+        if ([self.delegate respondsToSelector:@selector(pickerView:didSelectValue:)]) {
             [self callDelegateWithNewValueFromOffset:[self.scrollView contentOffset].x];
         }
     }
 }
 
 - (id)delegate {
-    return delegate;
+    return _delegate;
 }
 
 - (void)setDelegate:(id<STHorizontalPickerDelegate>)newDelegate {
-    delegate = newDelegate;
+    _delegate = newDelegate;
     
-//    [self resetMinMaxAndMarkersForPickerView];
+    [self resetMinMaxAndMarkersForPickerView];
 }
 
 -(void)resetMinMaxAndMarkersForPickerView;
 {
     NSUInteger needsReset = 0;
     
-    if ([delegate respondsToSelector:@selector(minimumValueForPickerView:)]) {
-        CGFloat newMinValue = [delegate minimumValueForPickerView:self];
+    if ([self.delegate respondsToSelector:@selector(minimumValueForPickerView:)]) {
+        CGFloat newMinValue = [self.delegate minimumValueForPickerView:self];
         if (newMinValue != minimumValue) {
             minimumValue = newMinValue;
             needsReset += 1;
         }
     }
-    if ([delegate respondsToSelector:@selector(maximumValueForPickerView:)]) {
-        CGFloat newMaxValue = [delegate maximumValueForPickerView:self];
+    if ([self.delegate respondsToSelector:@selector(maximumValueForPickerView:)]) {
+        CGFloat newMaxValue = [self.delegate maximumValueForPickerView:self];
         if (newMaxValue != maximumValue) {
             maximumValue = newMaxValue;
             needsReset += 1;
         }
     }
-    if ([delegate respondsToSelector:@selector(stepCountForPickerView:)]) {
-        CGFloat newStepsValue = [delegate stepCountForPickerView:self];
+    if ([self.delegate respondsToSelector:@selector(stepCountForPickerView:)]) {
+        CGFloat newStepsValue = [self.delegate stepCountForPickerView:self];
         if (newStepsValue != steps) {
             steps = newStepsValue;
+            needsReset += 1;
+        }
+    }
+    if ([self.delegate respondsToSelector:@selector(scaleTypeForPickerView:)]) {
+        STHorizontalPickerScaleType scaleType = [self.delegate scaleTypeForPickerView:self];
+        if (scaleType != STHorizontalPickerScaleType_None) {
             needsReset += 1;
         }
     }

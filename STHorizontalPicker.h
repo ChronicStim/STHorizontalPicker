@@ -17,6 +17,11 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 
+typedef NS_ENUM(NSUInteger, STHorizontalPickerScaleType) {
+    STHorizontalPickerScaleType_None,
+    STHorizontalPickerScaleType_Simple,
+    STHorizontalPickerScaleType_Decimal,
+};
 
 @class STHorizontalPicker;
 
@@ -31,6 +36,10 @@
 - (NSUInteger)stepCountForPickerView:(STHorizontalPicker *)picker;
 - (NSString *)displayStringForPickerView:(STHorizontalPicker *)picker atStep:(NSInteger)stepIndex withValue:(CGFloat)stepValue;
 - (CATextLayer *)caTextLayerForPickerView:(STHorizontalPicker *)picker atStep:(NSInteger)stepIndex withValue:(CGFloat)stepValue frame:(CGRect)layerFrame;
+- (STHorizontalPickerScaleType)scaleTypeForPickerView:(STHorizontalPicker *)picker;
+- (CGSize)labelSizePerStepForPickerView:(STHorizontalPicker *)picker;
+- (CGSize)spacerSizePerStepForPickerView:(STHorizontalPicker *)picker;
+- (CGFloat)fontSizeForLabelForPickerView:(STHorizontalPicker *)picker;
 
 @required
 - (void)pickerView:(STHorizontalPicker *)picker didSelectValue:(CGFloat)value;
@@ -59,7 +68,7 @@
     CGFloat minimumValue;
     CGFloat maximumValue;
     
-    id delegate;
+    id __weak _delegate;
     
     UIColor *borderColor;
     UIColor *dropShadowColor;
@@ -71,6 +80,8 @@
     
     UIFont *font;
     CGFloat fontSize;
+    CGSize _labelSizePerStep;
+    CGSize _spacerSizePerStep;
     
     BOOL showScale;
     
@@ -87,6 +98,7 @@
 @property (nonatomic, strong) UIColor *pointerStrokeColor;
 @property (nonatomic, strong) UIFont *font;
 @property (nonatomic, assign) BOOL showScale;
+@property (nonatomic, weak) IBOutlet id <STHorizontalPickerDelegate> delegate;
 
 - (void)loadAllViewComponents;
 - (void)setupMarkers;
@@ -107,6 +119,12 @@
 - (CGFloat)value;
 - (void)setValue:(CGFloat)newValue;
 - (void)moveToMidPointValue;
+
+- (CGSize)labelSizePerStep;
+- (void)setLabelSizePerStep:(CGSize)newSize;
+
+- (CGSize)spacerSizePerStep;
+- (void)setSpacerSizePerStep:(CGSize)newSize;
 
 - (UIColor *)borderColor;
 - (void)setBorderColor:(UIColor *)newColor;

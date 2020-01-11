@@ -1,6 +1,6 @@
 //
-//  STHorizontalPickerScaleDecimal.h
-//  STHorizontalPickerScaleDecimal
+//  STHorizontalPickerScaleSimple.h
+//  STHorizontalPickerScaleSimple
 //
 //  Created by Wendy Kutschke on 6/1/13
 //  Copyright 2013 Wendy Kutschke
@@ -9,6 +9,6 @@
 
 #import "STHorizontalPickerScale.h"
 
-@interface STHorizontalPickerScaleDecimal : STHorizontalPickerScale
+@interface STHorizontalPickerScaleSimple : STHorizontalPickerScale
 
 @end
