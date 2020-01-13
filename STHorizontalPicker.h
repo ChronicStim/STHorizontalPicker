@@ -17,6 +17,8 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 
+#define kSTHorizontalPickerPreferredFontName @"AvenirNextCondensed-Bold"
+
 typedef NS_ENUM(NSUInteger, STHorizontalPickerScaleType) {
     STHorizontalPickerScaleType_None,
     STHorizontalPickerScaleType_Simple,

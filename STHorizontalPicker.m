@@ -105,7 +105,7 @@ const float POINTER_HEIGHT = 18.0f;
     float contentWidth = leftPadding + (steps * distanceBetweenItems) + rightPadding + labelItemWidth / 2;
     
     scale = [[UIScreen mainScreen] scale];
-    font = [UIFont fontWithName:@"Arial-BoldMT" size:12.0f];
+    font = [UIFont fontWithName:kSTHorizontalPickerPreferredFontName size:12.0f];
     
     if ([self respondsToSelector:@selector(setContentScaleFactor:)]) {
         self.contentScaleFactor = scale;
@@ -331,7 +331,7 @@ const float POINTER_HEIGHT = 18.0f;
                     scaleLayer.frame = layerFrame;
                     scaleLayer.contentsScale = scale;
                     scaleLayer.labelColor = [UIColor cptPrimaryColor].CGColor;
-                    scaleLayer.scaleColor = [UIColor cptPrimaryColor].CGColor;
+                    scaleLayer.scaleColor = [UIColor darkGrayColor].CGColor;
 
                 }   break;
                 case STHorizontalPickerScaleType_Decimal:  {
@@ -340,7 +340,7 @@ const float POINTER_HEIGHT = 18.0f;
                     scaleLayer.frame = layerFrame;
                     scaleLayer.contentsScale = scale;
                     scaleLayer.labelColor = [UIColor cptPrimaryColor].CGColor;
-                    scaleLayer.scaleColor = [UIColor cptPrimaryColor].CGColor;
+                    scaleLayer.scaleColor = [UIColor darkGrayColor].CGColor;
 
                 }   break;
 
@@ -367,7 +367,7 @@ const float POINTER_HEIGHT = 18.0f;
             scaleLayer.frame = layerFrame;
             scaleLayer.contentsScale = scale;
             scaleLayer.labelColor = [UIColor cptPrimaryColor].CGColor;
-            scaleLayer.scaleColor = [UIColor cptPrimaryColor].CGColor;
+            scaleLayer.scaleColor = [UIColor darkGrayColor].CGColor;
             scaleLayer.primaryLabel = (__bridge CFStringRef)[NSString stringWithFormat:@"%.0f", currentValue];
             
             [self.scrollViewMarkerLayerArray addObject:scaleLayer];

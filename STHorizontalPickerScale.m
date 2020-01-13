@@ -7,6 +7,7 @@
 //
 
 #import "STHorizontalPickerScale.h"
+#import "STHorizontalPicker.h"
 #include <CoreText/CoreText.h>
 
 const CGFloat kSTHorizontalPickerScaleWidth = 40.0f;
@@ -274,7 +275,9 @@ const CGFloat kSTHorizontalPickerScaleHeight = 40.0f;
     paragraphStyle = CTParagraphStyleCreate(paragraphSettings, 2);
     CFDictionarySetValue(attributes, kCTParagraphStyleAttributeName, paragraphStyle);
     CFRelease(paragraphStyle);
-    font = CTFontCreateWithName(CFSTR("Arial-BoldMT"), self.fontSize, NULL);
+    CFStringRef fontName = (__bridge CFStringRef)kSTHorizontalPickerPreferredFontName;
+    font = CTFontCreateWithName(fontName, self.fontSize, NULL);
+    CFRelease(fontName);
     CFDictionarySetValue(attributes, kCTFontAttributeName, font);
     CFRelease(font);
     CFDictionarySetValue(attributes, kCTForegroundColorAttributeName, [self labelColor]);
