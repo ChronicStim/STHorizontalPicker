@@ -783,31 +783,33 @@ const float POINTER_HEIGHT = 18.0f;
     
     CGContextSetShadowWithColor(context, CGSizeMake(0, 2), 3.0, [UIColor colorWithRed:0.0 green:0.0 blue:0.0 alpha:0.3].CGColor);
     
-    CGMutablePathRef path;
-    path = CGPathCreateMutable();
-    CGPathMoveToPoint(path, NULL, layer.frame.size.width / 2 - POINTER_WIDTH / 2, 0);
-    CGPathAddLineToPoint(path, NULL, layer.frame.size.width / 2, POINTER_HEIGHT);
-    CGPathAddLineToPoint(path, NULL, layer.frame.size.width / 2 + POINTER_WIDTH / 2, 0);
-    CGPathCloseSubpath(path);
+    CGMutablePathRef path1;
+    path1 = CGPathCreateMutable();
+    CGPathMoveToPoint(path1, NULL, layer.frame.size.width / 2 - POINTER_WIDTH / 2, 0);
+    CGPathAddLineToPoint(path1, NULL, layer.frame.size.width / 2, POINTER_HEIGHT);
+    CGPathAddLineToPoint(path1, NULL, layer.frame.size.width / 2 + POINTER_WIDTH / 2, 0);
+    CGPathCloseSubpath(path1);
 
-    CGContextAddPath(context, path);
+    CGContextAddPath(context, path1);
     CGContextFillPath(context);
-    CGContextAddPath(context, path);
+    CGContextAddPath(context, path1);
     CGContextStrokePath(context);
-    
+    CGPathRelease(path1);
+
     CGContextSetShadowWithColor(context, CGSizeMake(0, -2), 3.0, [UIColor colorWithRed:0.0 green:0.0 blue:0.0 alpha:0.3].CGColor);
 
-    path = CGPathCreateMutable();
-    CGPathMoveToPoint(path, NULL, layer.frame.size.width / 2 - POINTER_WIDTH / 2, layer.frame.size.height);
-    CGPathAddLineToPoint(path, NULL, layer.frame.size.width / 2, layer.frame.size.height - POINTER_HEIGHT);
-    CGPathAddLineToPoint(path, NULL, layer.frame.size.width / 2 + POINTER_WIDTH / 2, layer.frame.size.height);
-    CGPathCloseSubpath(path);
+    CGMutablePathRef path2;
+    path2 = CGPathCreateMutable();
+    CGPathMoveToPoint(path2, NULL, layer.frame.size.width / 2 - POINTER_WIDTH / 2, layer.frame.size.height);
+    CGPathAddLineToPoint(path2, NULL, layer.frame.size.width / 2, layer.frame.size.height - POINTER_HEIGHT);
+    CGPathAddLineToPoint(path2, NULL, layer.frame.size.width / 2 + POINTER_WIDTH / 2, layer.frame.size.height);
+    CGPathCloseSubpath(path2);
     
-    CGContextAddPath(context, path);
+    CGContextAddPath(context, path2);
     CGContextFillPath(context);
-    CGContextAddPath(context, path);
+    CGContextAddPath(context, path2);
     CGContextStrokePath(context);
-    CGPathRelease(path);
+    CGPathRelease(path2);
     
     CGContextRestoreGState(context);
 }
